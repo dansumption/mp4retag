@@ -6,7 +6,6 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
-    "mp4js": "0.0.2",
     "musicmetadata": "^2.0.5"
   },
   "devDependencies": {}
