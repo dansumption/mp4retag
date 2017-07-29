@@ -6,6 +6,7 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
+    "jsmediatags": "^3.6.2",
     "musicmetadata": "^2.0.5"
   },
   "devDependencies": {}

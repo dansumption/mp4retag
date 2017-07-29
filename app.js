@@ -1,22 +1,21 @@
 var fs = require('fs');
-var mm = require('musicmetadata');
+var jsmediatags = require("jsmediatags");
  
-var path = "N:/Poetry/T_S_Eliot_Reads_Old_Possum_s_Book_of_Practical_Cats/";
+// var path = "N:/Poetry/T_S_Eliot_Reads_Old_Possum_s_Book_of_Practical_Cats/";
+var path = "N:/zzzTag/";
 
 var handleItem = (filename) => {
   var item = path + filename;
-  console.log("Reading ", item);
-  var stream = fs.createReadStream(item);
-  var parser = mm(stream, function (err, metadata) {
-  console.log("Data for " + item)
-  if (err) {
-    console.log (err);
-  }
-  console.log(metadata);
-  stream.close();
-});
-}
-
+  // console.log("Reading ", item);
+  jsmediatags.read(item, {
+    onSuccess: function(tag) {
+      console.log(item, tag);
+    },
+    onError: function(error) {
+      console.log(':(', error.type, error.info);
+    }
+  });
+};
 fs.readdir(path, function(err, items) {
     // console.log(items);
  
