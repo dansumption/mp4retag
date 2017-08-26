@@ -56,8 +56,9 @@ const processFile = ({file, tags}) => {
 };
 
 const makeFriendlyPath = (path) => {
-  const match = new RegExp(/:/, 'g');
-  return path.replace(match, "_");
+  const match = new RegExp(/[:*<>?\\/]/, 'g');
+  const safePath = path.replace(match, "_");
+  return safePath;
 }
 
 const createDirectory = (parts) => {
