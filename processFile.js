@@ -18,7 +18,7 @@ const processFile = (path, filename) => {
     }
   });
 
-    const moveFile = ({file, tags}) => {
+  const moveFile = ({file, tags}) => {
     const genre = tagsOperations.findGenre(tags);
     const album = tagsOperations.findAlbum(tags);
     const track = tagsOperations.findTrack(tags);
@@ -28,13 +28,14 @@ const processFile = (path, filename) => {
     }
     const albumPath = makeFriendlyPath(album);
         // TODO: re-enable create directory.
-    createDirectory([genre, albumPath]);
+    // createDirectory([genre, albumPath]);
     const fullPath = path + [genre, albumPath].join('/') + '/' + file
     // TODO: re-enable file copy.
     // const input = fs.createReadStream(path + file);
     // const output = fs.createWriteStream(fullPath);
     // input.pipe(output);
-    debug("PROCESSED ", `ALBUM ${album}`, `TRACK ${track}`, `GENRE ${genre}`, `TITLE ${title}`, `FILE ${file}`);
+    debug("PROCESSED ", `ALBUM ${album}`, `TRACK ${track}`, `GENRE ${genre}`, `TITLE ${title}`);
+    debug(`Finished ${filename}`, "\n");
   };
 
   const makeFriendlyPath = (path) => {
@@ -47,7 +48,7 @@ const processFile = (path, filename) => {
     const fullPath = path + parts.join('/');
     debug("Directory ", fullPath);
     mkdirp(fullPath, function(err) {
-      debug("Directory error ", err);
+      debug(`Directory error creating ${parts}`, err);
     });
   }
 };
