@@ -11,6 +11,8 @@ const path = "C:/Users/dan/Desktop/iPlayer Recordings/temp/";
 fs.readdir(path, function(err, items) {
     // debug(items);
     _.forEach(items, function(item) {
+        // TODO: don't process directories
+        // TODO: don't process non-mp4 files
         processFile(path, item);
     });
 });

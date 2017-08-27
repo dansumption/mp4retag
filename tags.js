@@ -1,5 +1,6 @@
 const _ = require("lodash");
-const debug = require('debug');
+const jsmediatags = require("jsmediatags");
+const debug = require('./debug');
 
 const genres = {
   "Comedy" : "Comedy",
@@ -8,6 +9,10 @@ const genres = {
   "Readings" : "Drama",
   "Factual" : "Factual",
   "Music" : "Music"
+}
+
+const readTags = (filePath, handleResult) => {
+  jsmediatags.read(filePath, handleResult);
 }
 
 const findAlbum = (tags) => {
@@ -49,8 +54,9 @@ const findGenre = (tags) => {
 }
 
 module.exports = {
-    findAlbum,
-    findGenre,
-    findTitle,
-    findTrack
+  readTags,
+  findAlbum,
+  findGenre,
+  findTitle,
+  findTrack
 };

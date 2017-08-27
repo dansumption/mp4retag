@@ -1,5 +1,4 @@
 const fs = require('fs');
-const jsmediatags = require("jsmediatags");
 var mkdirp = require('mkdirp');
 const debug = require('./debug');
 const tagsOperations = require('./tags');
@@ -7,7 +6,7 @@ const tagsOperations = require('./tags');
 const processFile = (path, filename) => {
   const filePath = path + filename;
   // debug("Reading ", item);
-  jsmediatags.read(filePath, {
+  tagsOperations.readTags(filePath, {
     onSuccess: function(tag) {
       const tags = tag['tags'] || tag;
       // debug(filePath, tag);
@@ -28,6 +27,7 @@ const processFile = (path, filename) => {
       debug("NO GENRE FOR ", file);
     }
     const albumPath = makeFriendlyPath(album);
+        // TODO: re-enable create directory.
     createDirectory([genre, albumPath]);
     const fullPath = path + [genre, albumPath].join('/') + '/' + file
     // TODO: re-enable file copy.
