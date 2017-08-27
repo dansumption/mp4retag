@@ -26,7 +26,7 @@ const processFile = (path, filename) => {
     if (!genre) {
       debug("NO GENRE FOR ", file);
     }
-    const albumPath = makeFriendlyPath(album);
+    const albumPath = makeFriendlyFilename(album);
         // TODO: re-enable create directory.
     // createDirectory([genre, albumPath]);
     const fullPath = path + [genre, albumPath].join('/') + '/' + file
@@ -38,7 +38,7 @@ const processFile = (path, filename) => {
     debug(`Finished ${filename}`, "\n");
   };
 
-  const makeFriendlyPath = (path) => {
+  const makeFriendlyFilename = (path) => {
     const match = new RegExp(/[:*<>?\\/]/, 'g');
     const safePath = path.replace(match, "_");
     return safePath;
