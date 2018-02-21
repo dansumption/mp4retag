@@ -1,17 +1,14 @@
 const fs = require('fs');
 var mkdirp = require('mkdirp');
 const debug = require('./debug');
-const tagsOperations = require('./tags');
+const readTags = require('./readTags');
+const mapTags = require('./mapTags');
 
 const processFile = (path, filename) => {
   const filePath = path + filename;
-  // debug("Reading ", item);
-  tagsOperations.readTags(filePath, {
-    onSuccess: function(tag) {
-      const tags = tag['tags'] || tag;
-      // debug(filePath, tag);
+  readTags(filePath, {
+    onSuccess: function(tags) {
       moveFile({file: filename, tags })
-      // debug(JSON.stringify(tag['tags']));
     },
     onError: function(error) {
       debug(':( ERROR ',filePath , error);
@@ -19,10 +16,10 @@ const processFile = (path, filename) => {
   });
 
   const moveFile = ({file, tags}) => {
-    const genre = tagsOperations.findGenre(tags);
-    const album = tagsOperations.findAlbum(tags);
-    const track = tagsOperations.findTrack(tags);
-    const title = tagsOperations.findTitle(tags);
+    const genre = mapTags.mapGenre(tags);
+    const album = mapTags.findAlbum(tags);
+    const track = mapTags.findTrack(tags);
+    const title = mapTags.findTitle(tags);
     if (!genre) {
       debug("NO GENRE FOR ", file);
     }
