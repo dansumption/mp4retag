@@ -17,23 +17,24 @@ const processFile = (path, filename) => {
 
   const moveFile = ({file, tags}) => {
     const genre = mapTags.mapGenre(tags);
-    const album = mapTags.findAlbum(tags);
+    const { programme, series } = mapTags.findProgrammeAndSeries(tags);
     const track = mapTags.findTrack(tags);
     const title = mapTags.findTitle(tags);
     if (!genre) {
       debug("NO GENRE FOR ", file);
     }
-    const albumPath = makeFriendlyFilename(album);
+    // const albumPath = makeFriendlyFilename(album);
     // const albumPathParts = // TODO ... use regexp to split into programme and series number 
         // TODO: re-enable create directory.
     // createDirectory([genre, albumPath]);
-    const fullPath = path + [genre, albumPath].join('/') + '/' + file;
+    // const fullPath = path + [genre, albumPath].join('/') + '/' + file;
     // TODO: re-enable file copy.
     // const input = fs.createReadStream(path + file);
     // const output = fs.createWriteStream(fullPath);
     // input.pipe(output);
-    debug("PROCESSED ", `\n\tALBUM ${album}`, `\n\tTRACK ${track}`, `\n\tGENRE ${genre}`, `\n\tTITLE ${title}`);
-    debug(`Finished ${filename}`, "\n");
+    debug("PROCESSED ", `\n\PROGRAMME ${programme}`, `\n\tSERIES ${series}`, `\n\tTRACK ${track}`, `\n\tGENRE ${genre}`, `\n\tTITLE ${title}`);
+    // debug(`Finished ${filename}`, "\n");
+    debug("\n");
   };
 
   const makeFriendlyFilename = (path) => {

@@ -7,6 +7,8 @@ const genres = {
     "Music": "Music"
 }
 
+
+
 const findAlbum = tags => {
     const taggedAlbum = tags['album'];
     return taggedAlbum;
@@ -36,10 +38,24 @@ const mapGenre = tags => {
     return mappedGenre;
 };
 
+const findProgrammeAndSeries = tags => {
+    const programmeAndSeriesRegExp = /^(.*): Series (\d+)\w*$/;
+    // TODO - FIXME!
+    const taggedAlbum = findAlbum(tags);
+    console.log (taggedAlbum);
+    var seriesAndEpisodeMatch = programmeAndSeriesRegExp.exec(taggedAlbum);
+    const programme = (seriesAndEpisodeMatch && seriesAndEpisodeMatch[1]) ?
+     seriesAndEpisodeMatch[1] : taggedAlbum;
+    const series = (seriesAndEpisodeMatch && seriesAndEpisodeMatch[2]) ?
+        seriesAndEpisodeMatch[2] : 1;
+    return { programme, series };
+}
+
 module.exports = {
     mapGenre,
     findAlbum,
     findGenre,
     findTitle,
-    findTrack
+    findTrack,
+    findProgrammeAndSeries
   };

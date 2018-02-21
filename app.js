@@ -4,7 +4,7 @@ const processFile = require('./processFile');
 const debug = require('./debug');
 
 // const path = "N:/Poetry/T_S_Eliot_Reads_Old_Possum_s_Book_of_Practical_Cats/";
-const path = "N:/zzzTag/backup/";
+const path = "N:/zzzTag/temp/";
 // const path = "N:/zzzTag/";
 // const path = "C:/Users/dan/Desktop/iPlayer Recordings/temp/";
 
