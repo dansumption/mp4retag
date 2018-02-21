@@ -14,7 +14,7 @@ const processFile = (path, filename) => {
       // debug(JSON.stringify(tag['tags']));
     },
     onError: function(error) {
-      debug(':( ERROR ',filePath , error.type, error.info);
+      debug(':( ERROR ',filePath , error);
     }
   });
 
@@ -27,14 +27,15 @@ const processFile = (path, filename) => {
       debug("NO GENRE FOR ", file);
     }
     const albumPath = makeFriendlyFilename(album);
+    // const albumPathParts = // TODO ... use regexp to split into programme and series number 
         // TODO: re-enable create directory.
     // createDirectory([genre, albumPath]);
-    const fullPath = path + [genre, albumPath].join('/') + '/' + file
+    const fullPath = path + [genre, albumPath].join('/') + '/' + file;
     // TODO: re-enable file copy.
     // const input = fs.createReadStream(path + file);
     // const output = fs.createWriteStream(fullPath);
     // input.pipe(output);
-    debug("PROCESSED ", `ALBUM ${album}`, `TRACK ${track}`, `GENRE ${genre}`, `TITLE ${title}`);
+    debug("PROCESSED ", `\n\tALBUM ${album}`, `\n\tTRACK ${track}`, `\n\tGENRE ${genre}`, `\n\tTITLE ${title}`);
     debug(`Finished ${filename}`, "\n");
   };
 

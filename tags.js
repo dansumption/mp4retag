@@ -1,5 +1,5 @@
 const _ = require("lodash");
-const jsmediatags = require("jsmediatags");
+var ffmpeg = require('fluent-ffmpeg');
 const debug = require('./debug');
 
 const genres = {
@@ -11,8 +11,17 @@ const genres = {
   "Music" : "Music"
 }
 
-const readTags = (filePath, handleResult) => {
-  jsmediatags.read(filePath, handleResult);
+const readTags = (filePath, {onSuccess, onError}) => {
+  ffmpeg(filePath)
+  .ffprobe(0, function(err, data) {
+    if (_.get(data, 'format.tags')) {
+      onSuccess(data.format.tags);
+    }
+    else {
+      onError(err);
+    }
+
+  });
 }
 
 const findAlbum = (tags) => {
