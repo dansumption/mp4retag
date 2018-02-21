@@ -3,9 +3,10 @@ var mkdirp = require('mkdirp');
 const debug = require('./debug');
 const readTags = require('./readTags');
 const mapTags = require('./mapTags');
+const pidRegexp = /(b[a-z0-9]+)_original\.m4a/;
 
 const processFile = (readPath, writePath, filename) => {
-  const filePath = readPath + filename;
+  const filePath = [readPath, filename].join('/');
   readTags(filePath, {
     onSuccess: function(tags) {
       moveFile({filename, readPath, writePath, tags })
@@ -19,14 +20,14 @@ const processFile = (readPath, writePath, filename) => {
     const genre = mapTags.mapGenre(tags);
     const artist = mapTags.mapArtist(genre);
     const { programme, seriesNumber, parentSeries } = mapTags.findProgrammeAndSeries(tags);
-    const track = mapTags.findTrack(tags);
+    const trackNumber = mapTags.findTrack(tags);
     const title = mapTags.findTitle(tags);
     if (!genre) {
       throw new Error("NO GENRE FOR " + filename);
     }
     const pathParts = makePathParts({  genre, parentSeries, programme, seriesNumber });
     const outputPath = [writePath, ...pathParts].join('/');
-    const outputFilename = sanitiseFilename(filename);
+    const outputFilename = getOuputFilename({ filename, trackNumber, title });
     const outputFilenameWithPath = [outputPath, outputFilename].join('/');
 
     // createDirectory([genre, albumPath]);
@@ -36,9 +37,7 @@ const processFile = (readPath, writePath, filename) => {
     // input.pipe(output);
     debug(
       filename,
-      `\n',
-      '\tPROGRAMME ${programme}`, `\n\tSERIES ${seriesNumber} (${parentSeries})`, `\n\tTRACK ${track}`, `\n\tGENRE ${genre}`, `\n\tTITLE ${title}`,
-      '\n',
+      // `\tPROGRAMME ${programme}`, `\tSERIES ${seriesNumber} (${parentSeries})`, `\tTRACK ${trackNumber}`, `\tGENRE ${genre}`, `\tTITLE ${title}`,
       outputFilenameWithPath,
       '\n'
     );
@@ -57,18 +56,21 @@ const processFile = (readPath, writePath, filename) => {
   };
 
   const sanitise = (path) => {
-    const match = new RegExp(/[:*<>?\\/]/, 'g');
+    const match = new RegExp(/[:*<>?\\/ ]/, 'g');
     const safePath = path.replace(match, "_");
     return safePath;
   }
 
-  const sanitiseFilename = filename => {
-    const sanitisedName = filename
-      .replace(/_original\.m4a/, '.m4a');
-    if (sanitiseFilename.length > 70) {
-      throw new Error("Output filename is too long: " + sanitisedName);
+  const getOuputFilename = ({ filename, trackNumber, title }) => {
+    const pidResults = pidRegexp.exec(filename);
+    if (!pidResults) {
+      throw new Error("Cannot find pid in " + filename);
     }
-    return sanitisedName;
+    const pid = pidResults[1];
+    const sanitisedTitle = sanitise(title.substr(0, 30));
+    const track = trackNumber ? trackNumber : '';
+    const outputFilename = `${track}_${sanitisedTitle}_${pid}.m4a`;
+    return outputFilename;
   }
 
   const createDirectory = (parts) => {

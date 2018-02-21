@@ -1,4 +1,4 @@
-const debugSeparator = "\t";
+const debugSeparator = "\n";
 
 const debug = (...args) => {
   console.log(args.join(debugSeparator));
