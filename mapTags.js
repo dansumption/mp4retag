@@ -40,9 +40,7 @@ const mapGenre = tags => {
 
 const findProgrammeAndSeries = tags => {
     const programmeAndSeriesRegExp = /^(.*): Series (\d+)\w*$/;
-    // TODO - FIXME!
     const taggedAlbum = findAlbum(tags);
-    console.log (taggedAlbum);
     var seriesAndEpisodeMatch = programmeAndSeriesRegExp.exec(taggedAlbum);
     const programme = (seriesAndEpisodeMatch && seriesAndEpisodeMatch[1]) ?
      seriesAndEpisodeMatch[1] : taggedAlbum;
