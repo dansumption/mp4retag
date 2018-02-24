@@ -1,85 +1,123 @@
+const _ = require('lodash');
 const fs = require('fs');
-var mkdirp = require('mkdirp');
+const mkdirp = require('mkdirp');
 const debug = require('./debug');
 const readTags = require('./readTags');
 const mapTags = require('./mapTags');
-const pidRegexp = /(b[a-z0-9]+)_original\.m4a/;
+const ffmpeg = require('fluent-ffmpeg');
 
-const processFile = (readPath, writePath, filename) => {
+const pidRegexp = /(b[a-z0-9]+)_(original|shortened|podcast)\.m4a/;
+
+const processFile = (readPath, writePath, failPath, filename) => {
   const filePath = [readPath, filename].join('/');
+  const onFail = errorMessage => {
+    debug("FAILED", filename, errorMessage, "\n");
+    // TODO : create fail path & add on error callback handler as 3rd parameter
+    // fs.copyFile([readPath, filename].join('/'), [failPath, filename].join('/'));
+  };
   readTags(filePath, {
-    onSuccess: function(tags) {
-      moveFile({filename, readPath, writePath, tags })
+    onSuccess: function (tags) {
+      try {
+        moveFile({ filename, readPath, writePath, tags })
+      }
+      catch (error) {
+        onFail(error);
+      }
     },
-    onError: function(error) {
-      debug(':( ERROR ',filePath , error);
+    onError: onFail
+  });
+};
+
+const moveFile = ({ filename, tags, readPath, writePath }) => {
+  const genre = mapTags.mapGenre(tags);
+  const artist = mapTags.mapArtist(genre);
+  const { programme, seriesNumber, parentSeries } = mapTags.findProgrammeAndSeries(tags);
+  const trackNumber = mapTags.findTrack(tags);
+  const title = mapTags.findTitle(tags);
+  if (!genre) {
+    throw new Error("NO GENRE FOR " + filename);
+  }
+  const pathParts = makePathParts({ genre, parentSeries, programme, seriesNumber });
+  const outputPath = [writePath, ...pathParts].join('/');
+  const outputFilename = getOuputFilename({ filename, trackNumber, title });
+  const outputFilenameWithPath = [outputPath, outputFilename].join('/');
+  const inputFilenameWithPath = [readPath, filename].join('/');
+
+  mkdirp(outputPath, function (err) {
+    if (err) {
+      throw new Error(`Error creating directory ${outputPath}: ${err}`);
     }
   });
 
-  const moveFile = ({filename, tags, readPath, writePath}) => {
-    const genre = mapTags.mapGenre(tags);
-    const artist = mapTags.mapArtist(genre);
-    const { programme, seriesNumber, parentSeries } = mapTags.findProgrammeAndSeries(tags);
-    const trackNumber = mapTags.findTrack(tags);
-    const title = mapTags.findTitle(tags);
-    if (!genre) {
-      throw new Error("NO GENRE FOR " + filename);
-    }
-    const pathParts = makePathParts({  genre, parentSeries, programme, seriesNumber });
-    const outputPath = [writePath, ...pathParts].join('/');
-    const outputFilename = getOuputFilename({ filename, trackNumber, title });
-    const outputFilenameWithPath = [outputPath, outputFilename].join('/');
-
-    // createDirectory([genre, albumPath]);
-    // TODO: re-enable file copy.
-    // const input = fs.createReadStream(path + file);
-    // const output = fs.createWriteStream(fullPath);
-    // input.pipe(output);
-    debug(
-      filename,
-      // `\tPROGRAMME ${programme}`, `\tSERIES ${seriesNumber} (${parentSeries})`, `\tTRACK ${trackNumber}`, `\tGENRE ${genre}`, `\tTITLE ${title}`,
-      outputFilenameWithPath,
-      '\n'
-    );
+  // TODO - album artist different for long-running?
+  const outputTags = {
+    genre,
+    artist,
+    album_artist: artist,
+    album: programme,
+    track: trackNumber,
+    disc: seriesNumber,
+    title
   };
 
-  const makePathParts = ({ genre, parentSeries, programme, seriesNumber }) => {
-    const pathParts = [ genre ];
-    if (parentSeries) {
-      pathParts.push(parentSeries);
-    }
-    pathParts.push(programme);
-    if (genre === 'Comedy' || seriesNumber > 1) {
-      pathParts.push(`Series ${seriesNumber}`);
-    }
-    return pathParts.map(sanitise);
-  };
-
-  const sanitise = (path) => {
-    const match = new RegExp(/[:*<>?\\/ ]/, 'g');
-    const safePath = path.replace(match, "_");
-    return safePath;
-  }
-
-  const getOuputFilename = ({ filename, trackNumber, title }) => {
-    const pidResults = pidRegexp.exec(filename);
-    if (!pidResults) {
-      throw new Error("Cannot find pid in " + filename);
-    }
-    const pid = pidResults[1];
-    const sanitisedTitle = sanitise(title.substr(0, 30));
-    const track = trackNumber ? trackNumber : '';
-    const outputFilename = `${track}_${sanitisedTitle}_${pid}.m4a`;
-    return outputFilename;
-  }
-
-  const createDirectory = (parts) => {
-    const fullPath = readPath + parts.join('/');
-    debug("Directory ", fullPath);
-    mkdirp(fullPath, function(err) {
-      debug(`Directory error creating ${parts}`, err);
-    });
-  }
+  debug(inputFilenameWithPath, outputFilenameWithPath);
+  const flags = metadata(outputTags);
+  // ffmpeg(inputFilenameWithPath)
+  //   .outputOptions(flags)
+  //   .on('error', function (err) {
+  //     debug(filename, 'An error occurred: ' + err.message, flags.join("\n  "));
+  //   })
+  //   .on('end', function () {
+  //     debug(filename, 'Processing finished !');
+  //   })
+  //   .saveToFile(outputFilenameWithPath);
 };
+
+const makePathParts = ({ genre, parentSeries, programme, seriesNumber }) => {
+  const pathParts = [genre];
+  if (parentSeries) {
+    pathParts.push(parentSeries);
+  }
+  pathParts.push(programme);
+  if (genre === 'Comedy' || seriesNumber !== '1') {
+    pathParts.push(`Series ${seriesNumber}`);
+  }
+  return pathParts.map(sanitisePath);
+};
+
+const sanitisePath = (path) => {
+  const match = new RegExp(/[:*<>?\\/ ]/, 'g');
+  const safePath = path.replace(match, "_");
+  return safePath;
+}
+
+const sanitiseParam = (param) => {
+  return param.replace("'", "\\'");
+}
+
+const metadata = (tags) => {
+  return _.flatMap(
+    _.filter(
+      _.toPairs(tags),
+      value => {
+        return value[1]
+      }),
+    (value) => {
+      return ["-metadata", `${value[0]}='${sanitiseParam(value[1])}'`];
+    });
+};
+
+
+const getOuputFilename = ({ filename, trackNumber, title }) => {
+  const pidResults = pidRegexp.exec(filename);
+  if (!pidResults) {
+    throw new Error("Cannot find pid in " + filename);
+  }
+  const pid = pidResults[1];
+  const sanitisedTitle = sanitisePath(title.substr(0, 30));
+  const track = trackNumber ? trackNumber : '';
+  const outputFilename = `${track}_${sanitisedTitle}_${pid}.m4a`;
+  return outputFilename;
+}
 
 module.exports = processFile;

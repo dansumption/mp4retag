@@ -43,7 +43,7 @@ const mapGenre = tags => {
     const taggedGenre = findGenre(tags);
     const mappedGenre = genres[taggedGenre];
     if (!mappedGenre) {
-        debug("Unfound genre: ", taggedGenre);
+        throw new Error("Unfound genre: " + taggedGenre);
     }
     return mappedGenre;
 };
@@ -60,7 +60,7 @@ const findProgrammeAndSeries = tags => {
         seriesNumber = seriesAndEpisodeMatch[2];
     } else {
         seriesName = taggedAlbum;
-        seriesNumber = 1; 
+        seriesNumber = '1'; 
     }
 
     let parentSeries, programme;
