@@ -60,17 +60,18 @@ const moveFile = ({ filename, tags, readPath, writePath }) => {
     title
   };
 
-  debug(inputFilenameWithPath, outputFilenameWithPath);
+  // debug(inputFilenameWithPath, outputFilenameWithPath);
   const flags = metadata(outputTags);
-  // ffmpeg(inputFilenameWithPath)
-  //   .outputOptions(flags)
-  //   .on('error', function (err) {
-  //     debug(filename, 'An error occurred: ' + err.message, flags.join("\n  "));
-  //   })
-  //   .on('end', function () {
-  //     debug(filename, 'Processing finished !');
-  //   })
-  //   .saveToFile(outputFilenameWithPath);
+  debug(flags);
+  ffmpeg({source: inputFilenameWithPath, logger: { error: debug }})
+    .outputOptions(flags)
+    .on('error', function (err) {
+      debug(filename, 'An error occurred: ' + err.message, flags.join("\n  "));
+    })
+    .on('end', function () {
+      debug(filename, 'Processing finished !');
+    })
+    .saveToFile(outputFilenameWithPath);
 };
 
 const makePathParts = ({ genre, parentSeries, programme, seriesNumber }) => {
@@ -92,7 +93,7 @@ const sanitisePath = (path) => {
 }
 
 const sanitiseParam = (param) => {
-  return param.replace("'", "\\'");
+  return param; // .replace(/([" ])/g, '\\$1');
 }
 
 const metadata = (tags) => {
@@ -103,7 +104,7 @@ const metadata = (tags) => {
         return value[1]
       }),
     (value) => {
-      return ["-metadata", `${value[0]}='${sanitiseParam(value[1])}'`];
+      return ['-metadata', `${value[0]}=${sanitiseParam(value[1])}`];
     });
 };
 
