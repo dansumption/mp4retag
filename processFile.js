@@ -47,29 +47,30 @@ const moveFile = ({ filename, tags, readPath, writePath }) => {
     if (err) {
       throw new Error(`Error creating directory ${outputPath}: ${err}`);
     }
+    else {
+      // TODO - album artist different for long-running?
+      const outputTags = {
+        genre,
+        artist,
+        album_artist: artist,
+        album: programme,
+        track: trackNumber,
+        disc: seriesNumber,
+        title
+      };
+
+      const flags = metadata(outputTags);
+      ffmpeg({ source: inputFilenameWithPath, logger: { error: debug } })
+        .outputOptions(flags)
+        .on('error', function (err, stdout, stderr) {
+          debug(filename, 'An error occurred: ' + err.message, "STDOUT: " + stdout, "STDERR: " + stderr);
+        })
+        .on('end', function () {
+          // debug(filename, 'Processing finished !');
+        })
+        .saveToFile(outputFilenameWithPath);
+    }
   });
-
-  // TODO - album artist different for long-running?
-  const outputTags = {
-    genre,
-    artist,
-    album_artist: artist,
-    album: programme,
-    track: trackNumber,
-    disc: seriesNumber,
-    title
-  };
-
-  const flags = metadata(outputTags);
-  ffmpeg({source: inputFilenameWithPath, logger: { error: debug }})
-    .outputOptions(flags)
-    .on('error', function (err, stdout, stderr) {
-      debug(filename, 'An error occurred: ' + err.message, "STDOUT: " + stdout, "STDERR: " + stderr);
-    })
-    .on('end', function () {
-      debug(filename, 'Processing finished !');
-    })
-    .saveToFile(outputFilenameWithPath);
 };
 
 const makePathParts = ({ genre, parentSeries, programme, seriesNumber }) => {
@@ -94,7 +95,7 @@ const sanitiseParam = (param) => {
   return param.includes(' ') ?
     `${param} `
     : param;
-     // .replace(/([" ])/g, '\\$1');
+  // .replace(/([" ])/g, '\\$1');
 }
 
 const metadata = (tags) => {
