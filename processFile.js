@@ -60,13 +60,11 @@ const moveFile = ({ filename, tags, readPath, writePath }) => {
     title
   };
 
-  // debug(inputFilenameWithPath, outputFilenameWithPath);
   const flags = metadata(outputTags);
-  debug(flags);
   ffmpeg({source: inputFilenameWithPath, logger: { error: debug }})
     .outputOptions(flags)
-    .on('error', function (err) {
-      debug(filename, 'An error occurred: ' + err.message, flags.join("\n  "));
+    .on('error', function (err, stdout, stderr) {
+      debug(filename, 'An error occurred: ' + err.message, "STDOUT: " + stdout, "STDERR: " + stderr);
     })
     .on('end', function () {
       debug(filename, 'Processing finished !');
@@ -93,7 +91,10 @@ const sanitisePath = (path) => {
 }
 
 const sanitiseParam = (param) => {
-  return param; // .replace(/([" ])/g, '\\$1');
+  return param.includes(' ') ?
+    `${param} `
+    : param;
+     // .replace(/([" ])/g, '\\$1');
 }
 
 const metadata = (tags) => {
