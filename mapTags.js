@@ -60,10 +60,11 @@ const findProgrammeAndSeries = tags => {
         seriesNumber = seriesAndEpisodeMatch[2];
     } else {
         seriesName = taggedAlbum;
+        // TODO - get series from existing tags
         seriesNumber = '1'; 
     }
 
-    let parentSeries, programme;
+    let parentSeries, programme, albumArtist;
     const parentSeriesMatch = parentSeriesRegexp.exec(seriesName);
     if (parentSeriesMatch) {
         parentSeries = parentSeriesMatch[1];
