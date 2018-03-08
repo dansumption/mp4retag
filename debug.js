@@ -1,7 +1,12 @@
 const debugSeparator = "\n";
 
 const debug = (...args) => {
-  console.log(args.join(debugSeparator), debugSeparator);
+  if (args && args.length) {
+    console.log(args.join(debugSeparator));
+  }
+  else {
+    console.log('\n');
+  }
 }
 
 module.exports = debug;

@@ -17,10 +17,14 @@ m4aFile.setDefaults({
     failDir
 })
 
+let chain = Promise.resolve();
+
 fs.readdir(readDir, function(err, files) {
     _.forEach(function(filename) {
         if (filesToMatch.exec(filename)) {
-            m4aFile.processFile(filename);
+            chain = chain.then(function() {
+                return m4aFile.processFile(filename)
+            });
         } else {
             debug("Skipping: " + filename);
         }

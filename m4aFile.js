@@ -28,9 +28,8 @@ const processFile = filename => {
     let outputTags = {};
     const readFilePath = [defaults.readDir, filename].join('/');
 
-    debug('Will read ' + readFilePath);
-
     const getTags = () => {
+        debug ('get tags');
         return readTags(readFilePath).then(
             function (tags) {
                 const genre = mapTags.mapGenre(tags);
@@ -58,15 +57,13 @@ const processFile = filename => {
         const writeDir = [defaults.writeDir, ...pathParts].join('/');
         const writeFilename = getOutputFilename({ filename, ...outputTags });
         const writeFilePath = [writeDir, writeFilename].join('/');
-        debug('Primse to make dir', writeFilePath);
         return new Promise(function (resolve, reject) {
-            debug("Mkdirp", writeFilePath);
+            debug("Make directory" + pathParts.join('/'));
             mkdirp(writeDir, function (err) {
                 if (err) {
                     reject(`Error creating directory ${writeDir}: ${err}`);
                 }
                 else {
-                    debug("Resolving", writeFilePath);
                     resolve(writeFilePath);
                 }
             });
@@ -74,9 +71,9 @@ const processFile = filename => {
     };
 
     const retagFile = (writeFilePath) => {
-        debug("Will write to file", writeFilePath);
         const flags = metadataForFFmpeg(outputTags);
         return new Promise(function (resolve, reject) {
+            debug("Writing file" + writeFilePath);
             ffmpeg({ source: readFilePath, logger: { error: debug } })
                 .outputOptions(flags)
                 .on('error', function (err, stdout, stderr) {
@@ -138,6 +135,9 @@ const processFile = filename => {
         const outputFilename = `${trackNumber}${sanitisedTitle}_${pid}.m4a`;
         return outputFilename;
     }
+
+    debug();
+    debug('Begin ' + readFilePath);
 
     return getTags()
         .then(getAndCreateWriteFilePath)
