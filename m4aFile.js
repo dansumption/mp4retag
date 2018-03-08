@@ -58,13 +58,13 @@ const processFile = filename => {
         const writeDir = [defaults.writeDir, ...pathParts].join('/');
         const writeFilename = getOutputFilename({ filename, ...outputTags });
         const writeFilePath = [writeDir, writeFilename].join('/');
-        return function () {
+        return new Promise(function (resolve, reject) {
             debug('Make directory ' + pathParts.join('/'));
             // TODO - SOMETHING WRONG HERE
-            return makeDirectory(writeDir).then(function (resolve, reject) {
+            return makeDirectory(writeDir).then(function () {
                 resolve(writeFilePath);
             });
-        };
+        });
     };
 
     const retagFile = (writeFilePath) => {
@@ -84,23 +84,27 @@ const processFile = filename => {
     };
 
     const moveSuccesfulFile = () => {
-        const successPath = defaults.completeDir + filename;
+        const successPath = [defaults.completeDir, filename].join('/');
         debug('Move to ' + successPath);
         // TODO - move directory making to defaults
-        return makeDirectory(defaults.completeDir).then(function(resolve, reject) {
-            moveFile(readFilePath, successPath);
-            resolve();
+        return new Promise(function (resolve, reject) {
+            makeDirectory(defaults.completeDir).then(function () {
+                moveFile(readFilePath, successPath);
+                resolve();
+            });
         });
     }
 
     // TODO - test
     const moveFailedFile = () => {
-        const failPath = defaults.failDir + filename;
+        const failPath = [defaults.failDir, filename].join('/');
         debug('Move to ' + failPath);
         // TODO - move directory making to defaults
-        return makeDirectory(defaults.failDir).then(function(resolve, reject) {
-            moveFile(readFilePath, failPath);
-            resolve();
+        return new Promise(function (resolve, reject) {
+            makeDirectory(defaults.failDir).then(function () {
+                moveFile(readFilePath, failPath);
+                resolve();
+            });
         });
     }
 
