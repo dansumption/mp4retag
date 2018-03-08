@@ -2,9 +2,10 @@ const _ = require('lodash');
 const fs = require('fs');
 const readTags = require('./readTags');
 const mapTags = require('./mapTags');
-const mkdirp = require('mkdirp');
 const debug = require('./debug');
 const ffmpeg = require('fluent-ffmpeg');
+const moveFile = require('./moveFile.js');
+const makeDirectory = require('./makeDirectory');
 
 const pidRegexp = /(b[a-z0-9]+)_(original|shortened|podcast)\.m4a/;
 
@@ -29,7 +30,7 @@ const processFile = filename => {
     const readFilePath = [defaults.readDir, filename].join('/');
 
     const getTags = () => {
-        debug ('get tags');
+        debug('get tags');
         return readTags(readFilePath).then(
             function (tags) {
                 const genre = mapTags.mapGenre(tags);
@@ -38,7 +39,7 @@ const processFile = filename => {
                 const trackNumber = mapTags.findTrack(tags);
                 const title = mapTags.findTitle(tags);
                 if (!genre) {
-                    throw new Error("NO GENRE FOR " + filename);
+                    throw new Error('NO GENRE FOR ' + filename);
                 }
                 outputTags = {
                     genre,
@@ -57,27 +58,23 @@ const processFile = filename => {
         const writeDir = [defaults.writeDir, ...pathParts].join('/');
         const writeFilename = getOutputFilename({ filename, ...outputTags });
         const writeFilePath = [writeDir, writeFilename].join('/');
-        return new Promise(function (resolve, reject) {
-            debug("Make directory" + pathParts.join('/'));
-            mkdirp(writeDir, function (err) {
-                if (err) {
-                    reject(`Error creating directory ${writeDir}: ${err}`);
-                }
-                else {
-                    resolve(writeFilePath);
-                }
+        return function () {
+            debug('Make directory ' + pathParts.join('/'));
+            // TODO - SOMETHING WRONG HERE
+            return makeDirectory(writeDir).then(function (resolve, reject) {
+                resolve(writeFilePath);
             });
-        });
+        };
     };
 
     const retagFile = (writeFilePath) => {
         const flags = metadataForFFmpeg(outputTags);
         return new Promise(function (resolve, reject) {
-            debug("Writing file" + writeFilePath);
+            debug('Writing retagged file ' + writeFilePath);
             ffmpeg({ source: readFilePath, logger: { error: debug } })
                 .outputOptions(flags)
                 .on('error', function (err, stdout, stderr) {
-                    reject(filename, 'An error occurred: ' + err.message, "STDOUT: " + stdout, "STDERR: " + stderr);
+                    reject(filename, 'An error occurred: ' + err.message, 'STDOUT: ' + stdout, 'STDERR: ' + stderr);
                 })
                 .on('end', function () {
                     resolve();
@@ -85,6 +82,28 @@ const processFile = filename => {
                 .saveToFile(writeFilePath);
         });
     };
+
+    const moveSuccesfulFile = () => {
+        const successPath = defaults.completeDir + filename;
+        debug('Move to ' + successPath);
+        // TODO - move directory making to defaults
+        return makeDirectory(defaults.completeDir).then(function(resolve, reject) {
+            moveFile(readFilePath, successPath);
+            resolve();
+        });
+    }
+
+    // TODO - test
+    const moveFailedFile = () => {
+        const failPath = defaults.failDir + filename;
+        debug('Move to ' + failPath);
+        // TODO - move directory making to defaults
+        return makeDirectory(defaults.failDir).then(function(resolve, reject) {
+            moveFile(readFilePath, failPath);
+            resolve();
+        });
+    }
+
 
     const makePathParts = ({ genre, artist, album_artist, album, disc }) => {
         const pathParts = [genre];
@@ -100,7 +119,7 @@ const processFile = filename => {
 
     const sanitisePath = (path) => {
         const unsafeCharacters = new RegExp(/[:*<>?\\/ _]+/, 'g');
-        const safePath = path.replace(unsafeCharacters, "_");
+        const safePath = path.replace(unsafeCharacters, '_');
         return safePath;
     }
 
@@ -127,7 +146,7 @@ const processFile = filename => {
     const getOutputFilename = ({ filename, track, title }) => {
         const pidResults = pidRegexp.exec(filename);
         if (!pidResults) {
-            throw new Error("Cannot find pid in " + filename);
+            throw new Error('Cannot find pid in ' + filename);
         }
         const pid = pidResults[1];
         const sanitisedTitle = sanitisePath(title.substr(0, 30));
@@ -142,8 +161,10 @@ const processFile = filename => {
     return getTags()
         .then(getAndCreateWriteFilePath)
         .then(retagFile)
+        .then(moveSuccesfulFile)
         .catch(function (error) {
-            debug("FAILED", filename, error, "\n");
+            debug('FAILED', filename, error, '\n');
+            moveFailedFile();
         }
         );
 }
