@@ -112,7 +112,7 @@ const processFile = filename => {
 
 
     const makePathParts = ({ genre, artist, album_artist, album, disc }) => {
-        const pathParts = [genre];
+        const pathParts = [genre, artist];
         if (album_artist !== artist) {
             pathParts.push(album_artist);
         }
