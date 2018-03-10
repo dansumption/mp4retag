@@ -60,7 +60,6 @@ const findProgrammeAndSeries = tags => {
         seriesNumber = seriesAndEpisodeMatch[2];
     } else {
         seriesName = taggedAlbum;
-        // TODO - get series from existing tags
         seriesNumber = '1'; 
     }
 

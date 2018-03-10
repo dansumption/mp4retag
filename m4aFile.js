@@ -60,7 +60,6 @@ const processFile = filename => {
         const writeFilePath = [writeDir, writeFilename].join('/');
         return new Promise(function (resolve, reject) {
             debug('Make directory ' + pathParts.join('/'));
-            // TODO - SOMETHING WRONG HERE
             return makeDirectory(writeDir).then(function () {
                 resolve(writeFilePath);
             });
@@ -70,13 +69,16 @@ const processFile = filename => {
     const retagFile = (writeFilePath) => {
         const flags = metadataForFFmpeg(outputTags);
         return new Promise(function (resolve, reject) {
-            debug('Writing retagged file ' + writeFilePath);
+            debug('Writing retagged file to ' + writeFilePath);
             ffmpeg({ source: readFilePath, logger: { error: debug } })
                 .outputOptions(flags)
+                .audioCodec('copy')
+                .noVideo()
                 .on('error', function (err, stdout, stderr) {
-                    reject(filename, 'An error occurred: ' + err.message, 'STDOUT: ' + stdout, 'STDERR: ' + stderr);
+                    reject('An error occurred running ffmpeg: ' + err.message + '\nSTDOUT: ' + stdout + '\nSTDERR: ' + stderr);
                 })
-                .on('end', function () {
+                .on('end', function (stdout, stderr) {
+                    // debug(filename, 'Success.', 'STDOUT: ' + stdout, 'STDERR: ' + stderr);
                     resolve();
                 })
                 .saveToFile(writeFilePath);
@@ -85,7 +87,7 @@ const processFile = filename => {
 
     const moveSuccesfulFile = () => {
         const successPath = [defaults.completeDir, filename].join('/');
-        debug('Move to ' + successPath);
+        debug('Move original to ' + successPath);
         // TODO - move directory making to defaults
         return new Promise(function (resolve, reject) {
             makeDirectory(defaults.completeDir).then(function () {
@@ -98,7 +100,7 @@ const processFile = filename => {
     // TODO - test
     const moveFailedFile = () => {
         const failPath = [defaults.failDir, filename].join('/');
-        debug('Move to ' + failPath);
+        debug('Move original to ' + failPath);
         // TODO - move directory making to defaults
         return new Promise(function (resolve, reject) {
             makeDirectory(defaults.failDir).then(function () {
