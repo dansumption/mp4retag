@@ -6,8 +6,8 @@ const debug = require('./debug');
 const ffmpeg = require('fluent-ffmpeg');
 const moveFile = require('./moveFile.js');
 const makeDirectory = require('./makeDirectory');
-
-const pidRegexp = /(b[a-z0-9]+)_(original|shortened|podcast)\.m4a/;
+const makePath = require('./makePath');
+const pidRegexp = /([bp][a-z0-9]+)_(original|shortened|podcast|editorial|other)\.m4a/;
 
 let defaults;
 
@@ -27,7 +27,7 @@ const setDefaults = ({
 
 const processFile = filename => {
     let outputTags = {};
-    const readFilePath = [defaults.readDir, filename].join('/');
+    const readFilePath = makePath([defaults.readDir, filename]);
 
     const getTags = () => {
         debug('get tags');
@@ -55,11 +55,11 @@ const processFile = filename => {
 
     const getAndCreateWriteFilePath = () => {
         const pathParts = makePathParts(outputTags);
-        const writeDir = [defaults.writeDir, ...pathParts].join('/');
+        const writeDir = makePath([defaults.writeDir, ...pathParts]);
         const writeFilename = getOutputFilename({ filename, ...outputTags });
-        const writeFilePath = [writeDir, writeFilename].join('/');
+        const writeFilePath = makePath([writeDir, writeFilename]);
         return new Promise(function (resolve, reject) {
-            debug('Make directory ' + pathParts.join('/'));
+            debug('Make directory ' + makePath(pathParts));
             return makeDirectory(writeDir).then(function () {
                 resolve(writeFilePath);
             });
@@ -86,7 +86,7 @@ const processFile = filename => {
     };
 
     const moveSuccesfulFile = () => {
-        const successPath = [defaults.completeDir, filename].join('/');
+        const successPath = makePath([defaults.completeDir, filename]);
         debug('Move original to ' + successPath);
         // TODO - move directory making to defaults
         return new Promise(function (resolve, reject) {
@@ -99,7 +99,7 @@ const processFile = filename => {
 
     // TODO - test
     const moveFailedFile = () => {
-        const failPath = [defaults.failDir, filename].join('/');
+        const failPath = makePath([defaults.failDir, filename]);
         debug('Move original to ' + failPath);
         // TODO - move directory making to defaults
         return new Promise(function (resolve, reject) {
@@ -124,7 +124,7 @@ const processFile = filename => {
     };
 
     const sanitisePath = (path) => {
-        const unsafeCharacters = new RegExp(/[:*<>?\\/ _]+/, 'g');
+        const unsafeCharacters = new RegExp(/[:*<>?\\/_]+/, 'g');
         const safePath = path.replace(unsafeCharacters, '_');
         return safePath;
     }
@@ -156,8 +156,8 @@ const processFile = filename => {
         }
         const pid = pidResults[1];
         const sanitisedTitle = sanitisePath(title.substr(0, 30));
-        const trackNumber = track ? `${track}_` : '';
-        const outputFilename = `${trackNumber}${sanitisedTitle}_${pid}.m4a`;
+        const trackNumber = track ? `${track} ` : '';
+        const outputFilename = `${trackNumber}${sanitisedTitle} ${pid}.m4a`;
         return outputFilename;
     }
 
@@ -171,6 +171,7 @@ const processFile = filename => {
         .catch(function (error) {
             debug('FAILED', filename, error, '\n');
             moveFailedFile();
+            return error;
         }
         );
 }

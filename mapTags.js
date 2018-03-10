@@ -1,6 +1,8 @@
 const genres = {
     "Comedy": "Comedy",
     "Games & Quizzes": "Comedy",
+    "Entertainment": "Comedy",
+    "Discussion & Talk": "Comedy",
     "Drama": "Drama",
     "Readings": "Drama",
     "Factual": "Factual",

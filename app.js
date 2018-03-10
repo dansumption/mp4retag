@@ -2,14 +2,16 @@ const fs = require('fs');
 const _ = require("lodash/fp");
 const debug = require('./debug');
 const m4aFile = require('./m4aFile');
+const makePath = require('./makePath');
 
 const startTime = new Date();
+// const readDir = "n:/zzzTag/temp";
 const readDir = "n:/zzzTag/allfiles";
 const writeDir = "n:/zzzTag/output";
 // const readDir = "C:/Users/dan/Desktop/iPlayer Recordings/temp";
-// const writeDir = "C:/Users/dan/Desktop/iPlayer tagged";
-const completeDir = [readDir, "complete"].join('/');
-const failDir = [readDir, "failed"].join('/');
+// const writeDir = "C:/Users/dan/Desktop/iPlayer Recordings/tagged";
+const completeDir = makePath([readDir, "complete"]);
+const failDir = makePath([readDir, "failed"]);
 const filesToMatch = /\.m4a$/;
 
 
@@ -22,14 +24,23 @@ m4aFile.setDefaults({
 
 let chain = Promise.resolve();
 let filesProcessed = 0;
+let filesFailed = 0;
 let filesSkipped = 0;
+const errors = [];
 
 fs.readdir(readDir, function (err, files) {
     _.forEach(function (filename) {
         if (filesToMatch.exec(filename)) {
             chain = chain.then(function () {
                 filesProcessed++;
-                return m4aFile.processFile(filename)
+                return m4aFile
+                    .processFile(filename)
+                    .then(function (error) {
+                        if (error) {
+                            errors.push(error);
+                            filesFailed++;
+                        }
+                    })
             });
         } else {
             filesSkipped++;
@@ -47,7 +58,11 @@ fs.readdir(readDir, function (err, files) {
         const hours = Math.round(timeDiff % 24);
         timeDiff = Math.floor(timeDiff / 24);
         const days = timeDiff;
-    
-        debug(`Processed ${filesProcessed} files, and skipped ${filesSkipped}.`, `In ${days} days, ${hours}:${minutes}:${seconds}`);
+
+        if (errors.length) {
+            debug("Errors encountered: ", errors);
+        }
+
+        debug(`Processed ${filesProcessed} files of which ${filesFailed} failed. Skipped ${filesSkipped} files/directories.`, `In ${days} days, ${hours}:${minutes}:${seconds}`);
     })
 });
