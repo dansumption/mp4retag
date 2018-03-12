@@ -7,7 +7,7 @@ const ffmpeg = require('fluent-ffmpeg');
 const moveFile = require('./moveFile.js');
 const makeDirectory = require('./makeDirectory');
 const makePath = require('./makePath');
-const pidRegexp = /([bp][a-z0-9]+)_(original|shortened|podcast|editorial|other)\.m4a/;
+const pidRegexp = /([bp][a-z0-9]+)_(original|shortened|podcast|editorial|other|default)\.(m(4a|p3))/;
 
 let defaults;
 
@@ -155,9 +155,10 @@ const processFile = filename => {
             throw new Error('Cannot find pid in ' + filename);
         }
         const pid = pidResults[1];
+        const fileExtension = pidResults[3];
         const sanitisedTitle = sanitisePath(title.substr(0, 30));
         const trackNumber = track ? `${track} ` : '';
-        const outputFilename = `${trackNumber}${sanitisedTitle} ${pid}.m4a`;
+        const outputFilename = `${trackNumber}${sanitisedTitle} ${pid}.${fileExtension}`;
         return outputFilename;
     }
 

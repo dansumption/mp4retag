@@ -6,13 +6,13 @@ const makePath = require('./makePath');
 
 const startTime = new Date();
 // const readDir = "n:/zzzTag/temp";
-const readDir = "n:/zzzTag/allfiles";
+// const readDir = "n:/zzzTag/allfiles";
+const readDir = "C:/Users/dan/Desktop/iPlayer Recordings";
 const writeDir = "n:/zzzTag/output";
-// const readDir = "C:/Users/dan/Desktop/iPlayer Recordings/temp";
 // const writeDir = "C:/Users/dan/Desktop/iPlayer Recordings/tagged";
 const completeDir = makePath([readDir, "complete"]);
 const failDir = makePath([readDir, "failed"]);
-const filesToMatch = /\.m4a$/;
+const filesToMatch = /\.m(4a|p3)$/;
 
 
 m4aFile.setDefaults({
