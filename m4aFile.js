@@ -125,7 +125,7 @@ const processFile = filename => {
 
     const sanitisePath = (path) => {
         const unsafeCharacters = new RegExp(/[:*<>?\\/_]+/, 'g');
-        const safePath = path.replace(unsafeCharacters, '_');
+        const safePath = path.replace(unsafeCharacters, '');
         return safePath;
     }
 

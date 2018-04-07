@@ -6,14 +6,15 @@ const genres = {
     "Drama": "Drama",
     "Readings": "Drama",
     "Factual": "Factual",
+    "Learning": "Factual",
     "Music": "Music"
 }
 
 const parentSeries = [
     'Book at Bedtime',
-	'Classic Serial',
-	'Book of the Week',
-	'Saturday Drama'
+    'Classic Serial',
+    'Book of the Week',
+    'Saturday Drama'
 ];
 
 const programmeAndSeriesRegExp = /^(.*): Series (\d+)\w*$/;
@@ -24,22 +25,22 @@ const parentSeriesRegexp = new RegExp('^('
 const findAlbum = tags => {
     const taggedAlbum = tags['album'];
     return taggedAlbum;
-  }
-  
-  const findTrack = tags => {
+}
+
+const findTrack = tags => {
     const taggedTrack = tags['track'];
     return taggedTrack;
-  }
-  
-  const findTitle = tags => {
+}
+
+const findTitle = tags => {
     const taggedTitle = tags['title'];
     return taggedTitle;
-  }
-  
-  const findGenre = tags => {
+}
+
+const findGenre = tags => {
     const taggedGenre = tags['genre'];
     return taggedGenre;
-  }
+}
 
 const mapGenre = tags => {
     const taggedGenre = findGenre(tags);
@@ -62,7 +63,7 @@ const findProgrammeAndSeries = tags => {
         seriesNumber = seriesAndEpisodeMatch[2];
     } else {
         seriesName = taggedAlbum;
-        seriesNumber = '1'; 
+        seriesNumber = '1';
     }
 
     let parentSeries, programme, albumArtist;
@@ -89,4 +90,4 @@ module.exports = {
     findTitle,
     findTrack,
     findProgrammeAndSeries
-  };
+};
